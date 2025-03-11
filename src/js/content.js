@@ -11,6 +11,10 @@ let lastSuccessfulSubmissionId = null;
 let submissionObserver = null;
 const ACTIVITY_CHECK_INTERVAL = 1000; // Check every second
 const DUPLICATE_SUBMISSION_THRESHOLD = 5000; // 5 seconds
+const ACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity timeout
+let lastProblemId = null;
+let problemTimeMap = {}; // Track time for each problem
+let lastActiveTime = Date.now();
 
 // Activity monitoring
 document.addEventListener('mousemove', updateActivity);
@@ -25,12 +29,24 @@ function updateActivity() {
   // Only send activity update if it's been more than 1 second since the last one
   if (now - lastActivityTime > ACTIVITY_CHECK_INTERVAL) {
     lastActivityTime = now;
+    lastActiveTime = now;
+    
+    // Update active time for current problem
+    if (currentProblemId && problemTimeMap[currentProblemId]) {
+      const timeSinceLastUpdate = now - problemTimeMap[currentProblemId].lastUpdate;
+      if (timeSinceLastUpdate < ACTIVITY_TIMEOUT) {
+        problemTimeMap[currentProblemId].activeTime += timeSinceLastUpdate;
+      }
+      problemTimeMap[currentProblemId].lastUpdate = now;
+    }
     
     // Send activity message to background script
     chrome.runtime.sendMessage({
       type: 'activity',
       problemId: currentProblemId,
-      problemTitle: currentProblemTitle
+      problemTitle: currentProblemTitle,
+      lastActivity: now,
+      activeTime: currentProblemId ? problemTimeMap[currentProblemId]?.activeTime : 0
     });
     
     console.log('Activity detected and sent to background');
@@ -64,8 +80,24 @@ function initializeProblemTracking() {
       console.log('Detected problem title:', currentProblemTitle);
       
       // Only set start time if we're on the problem page (not submission page)
-      if (!currentPath.includes('/submissions/') && !problemStartTime) {
-        problemStartTime = Date.now();
+      if (!currentPath.includes('/submissions/')) {
+        // Initialize or update problem time tracking
+        if (!problemTimeMap[problemId]) {
+          problemTimeMap[problemId] = {
+            startTime: Date.now(),
+            activeTime: 0,
+            lastUpdate: Date.now()
+          };
+        } else if (lastProblemId !== problemId) {
+          // If switching to a different problem, update the start time
+          problemTimeMap[problemId].startTime = Date.now();
+          problemTimeMap[problemId].lastUpdate = Date.now();
+        }
+        
+        problemStartTime = problemTimeMap[problemId].startTime;
+        lastProblemId = problemId;
+        lastActiveTime = Date.now();
+        
         console.log('Setting problem start time:', new Date(problemStartTime).toLocaleTimeString());
         
         // Notify background script that a problem has been opened
@@ -323,8 +355,8 @@ function checkSubmissionResult(timing = 'immediate') {
         const problemData = extractProblemData();
         problemData.submissionId = submissionId;
         
-        // Calculate time spent
-        const timeSpent = problemStartTime ? currentTime - problemStartTime : 0;
+        // Calculate accurate time spent
+        const timeSpent = calculateTimeSpent();
         problemData.timeSpent = timeSpent;
         problemData.submissionTime = currentTime;
         
@@ -501,6 +533,31 @@ function formatDuration(ms) {
   const hours = Math.floor(ms / (1000 * 60 * 60));
   
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function calculateTimeSpent() {
+  if (!currentProblemId || !problemTimeMap[currentProblemId]) return 0;
+  
+  const now = Date.now();
+  const problemData = problemTimeMap[currentProblemId];
+  
+  // Calculate time since last update
+  let additionalTime = 0;
+  if (now - lastActiveTime < ACTIVITY_TIMEOUT) {
+    additionalTime = now - problemData.lastUpdate;
+  }
+  
+  // Total active time for this problem
+  const totalTime = problemData.activeTime + additionalTime;
+  console.log('Calculated time spent:', {
+    problemId: currentProblemId,
+    activeTime: problemData.activeTime,
+    additionalTime,
+    totalTime,
+    formattedTime: formatDuration(totalTime)
+  });
+  
+  return totalTime;
 }
 
 // Listen for messages from the background script

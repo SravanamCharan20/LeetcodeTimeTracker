@@ -1,9 +1,10 @@
 // Constants
-const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
 const DUPLICATE_SUBMISSION_THRESHOLD = 5000; // 5 seconds
 const STORAGE_KEY_PREFIX = 'leetcode_stats_';
 const STATE_STORAGE_KEY = 'leetcode_state';
 const API_BASE_URL = 'http://localhost:3000/api';
+const IDLE_THRESHOLD = 15 * 60 * 1000; // 15 minutes
 
 // State management
 let currentState = {
@@ -160,11 +161,18 @@ function updateTotalTime() {
   
   if (currentState.trackingStartTime && currentState.isTracking) {
     // Calculate time since last update
-    const trackingDuration = now - currentState.trackingStartTime;
-    currentState.totalTimeToday += trackingDuration;
+    let trackingDuration = now - currentState.trackingStartTime;
     
-    // Update total_time_spent in milliseconds
-    currentState.dailyStats.total_time_spent = currentState.totalTimeToday;
+    // If there's been no activity for IDLE_THRESHOLD, subtract the idle time
+    if (now - currentState.lastActivity > IDLE_THRESHOLD) {
+      trackingDuration -= (now - currentState.lastActivity - IDLE_THRESHOLD);
+    }
+    
+    // Only add positive durations
+    if (trackingDuration > 0) {
+      currentState.totalTimeToday += trackingDuration;
+      currentState.dailyStats.total_time_spent = currentState.totalTimeToday;
+    }
     
     // Reset for next update
     currentState.trackingStartTime = now;
@@ -234,21 +242,17 @@ function trackProblemSolved(problemData) {
   const now = Date.now();
   
   // Check for duplicate submissions
-  const lastSubmission = currentState.dailyStats.problems_solved[0];
-  if (lastSubmission && 
-      lastSubmission.id === problemData.id && 
-      now - lastSubmission.timestamp < DUPLICATE_SUBMISSION_THRESHOLD) {
+  if (currentState.lastSubmission && 
+      currentState.lastSubmission.id === problemData.id && 
+      now - currentState.lastSubmission.timestamp < DUPLICATE_SUBMISSION_THRESHOLD) {
     console.log('Duplicate submission detected, ignoring');
     return;
   }
   
   console.log('Problem solved:', problemData);
   
-  // Calculate time spent on this problem
-  let timeSpent = 0;
-  if (currentState.currentProblem && currentState.currentProblem.id === problemData.id) {
-    timeSpent = now - currentState.currentProblem.startTime;
-  }
+  // Use the tracked active time for the problem
+  const timeSpent = Math.max(0, problemData.timeSpent || currentState.currentProblem?.activeTime || 0);
   
   // Add to solved problems
   const solvedProblem = {
@@ -259,6 +263,7 @@ function trackProblemSolved(problemData) {
   
   // Add to the beginning of the array
   currentState.dailyStats.problems_solved.unshift(solvedProblem);
+  currentState.lastSubmission = solvedProblem;
   
   // Update count
   currentState.dailyStats.problems_solved_count = currentState.dailyStats.problems_solved.length;
@@ -269,7 +274,8 @@ function trackProblemSolved(problemData) {
 }
 
 function handleUserActivity(message) {
-  currentState.lastActivity = Date.now();
+  const now = Date.now();
+  currentState.lastActivity = now;
   
   if (!currentState.isTracking) {
     startTracking();
@@ -281,8 +287,13 @@ function handleUserActivity(message) {
   if (message.problemTitle && (!currentState.currentProblem || currentState.currentProblem.title !== message.problemTitle)) {
     currentState.currentProblem = {
       title: message.problemTitle,
-      id: message.problemId
+      id: message.problemId,
+      startTime: now,
+      activeTime: message.activeTime || 0
     };
+  } else if (currentState.currentProblem && message.activeTime !== undefined) {
+    // Update active time if available
+    currentState.currentProblem.activeTime = message.activeTime;
   }
   
   // Update total time
@@ -370,18 +381,13 @@ async function saveDailyStats() {
         title: problem.title || problem.problem_name || 'Unknown Problem',
         difficulty: problem.difficulty || 'Medium',
         language: problem.language || 'Unknown',
-        timeSpent: problem.timeSpent || 0,
-        timestamp: problem.timestamp || problem.submissionTime || Date.now(),
+        timeSpent: Math.max(0, problem.timeSpent || 0), // Ensure non-negative time
+        timestamp: problem.timestamp || Date.now(),
         url: problem.url
       })),
-      totalTimeSpent: currentState.totalTimeToday
+      problemsSolvedCount: currentState.dailyStats.problems_solved.length,
+      totalTimeSpent: Math.max(0, currentState.totalTimeToday) // Ensure non-negative time
     };
-
-    // Save to local storage
-    const key = `${STORAGE_KEY_PREFIX}${currentState.dailyStats.date}`;
-    await chrome.storage.local.set({
-      [key]: statsToSave
-    });
 
     // Save to MongoDB
     const response = await fetch(`${API_BASE_URL}/stats`, {
@@ -396,6 +402,12 @@ async function saveDailyStats() {
       throw new Error('Failed to save stats to server');
     }
 
+    // Also save to local storage as backup
+    const key = `${STORAGE_KEY_PREFIX}${currentState.dailyStats.date}`;
+    await chrome.storage.local.set({
+      [key]: statsToSave
+    });
+    
     console.log('Saved daily stats for:', currentState.dailyStats.date);
   } catch (error) {
     console.error('Error saving stats:', error);
