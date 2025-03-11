@@ -25,28 +25,51 @@ db.once('open', () => {
 // Routes
 app.post('/api/stats', async (req, res) => {
   try {
-    const { date, problemsSolved, totalTimeSpent } = req.body;
+    const { date, problemsSolved, problemsSolvedCount, totalTimeSpent, idleTimeSpent, isNewDay } = req.body;
     
-    // Find existing stats for the date or create new one
-    let stats = await ActivityStats.findOne({ date });
-    
-    if (stats) {
-      // Update existing stats
-      stats.problemsSolved = problemsSolved;
-      stats.problemsSolvedCount = problemsSolved.length;
-      stats.totalTimeSpent = totalTimeSpent;
-      await stats.save();
-    } else {
-      // Create new stats
-      stats = new ActivityStats({
-        date,
-        problemsSolved,
-        problemsSolvedCount: problemsSolved.length,
-        totalTimeSpent
-      });
-      await stats.save();
+    if (isNewDay) {
+      // For a new day, first ensure previous day's data is saved
+      const previousDate = new Date(date);
+      previousDate.setDate(previousDate.getDate() - 1);
+      const previousDateStr = previousDate.toISOString().split('T')[0];
+      
+      // Then create a fresh document for the new day
+      const stats = await ActivityStats.findOneAndUpdate(
+        { date },
+        {
+          date,
+          problemsSolved: [],
+          problemsSolvedCount: 0,
+          totalTimeSpent: 0,
+          idleTimeSpent: 0
+        },
+        {
+          new: true,
+          upsert: true,
+          runValidators: true
+        }
+      );
+      
+      return res.json(stats);
     }
     
+    // Normal update for existing day
+    const stats = await ActivityStats.findOneAndUpdate(
+      { date },
+      { 
+        date,
+        problemsSolved,
+        problemsSolvedCount,
+        totalTimeSpent,
+        idleTimeSpent
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
+      }
+    );
+
     res.json(stats);
   } catch (error) {
     console.error('Error saving stats:', error);
