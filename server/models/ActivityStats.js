@@ -28,6 +28,10 @@ const activityStatsSchema = new mongoose.Schema({
   totalTimeSpent: {
     type: Number,
     default: 0
+  },
+  idleTimeSpent: {
+    type: Number,
+    default: 0
   }
 });
 

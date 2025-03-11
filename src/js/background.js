@@ -1,10 +1,8 @@
 // Constants
-const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 const DUPLICATE_SUBMISSION_THRESHOLD = 5000; // 5 seconds
-const STORAGE_KEY_PREFIX = 'leetcode_stats_';
-const STATE_STORAGE_KEY = 'leetcode_state';
 const API_BASE_URL = 'http://localhost:3000/api';
-const IDLE_THRESHOLD = 15 * 60 * 1000; // 15 minutes
+const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 
 // State management
 let currentState = {
@@ -13,27 +11,52 @@ let currentState = {
   idleTimer: null,
   trackingStartTime: null,
   totalTimeToday: 0,
+  idleTimeToday: 0,
+  lastIdleStart: null,
   currentProblem: null,
   lastSubmission: null,
   activeTabs: 0,
   dailyStats: {
     date: null,
     total_time_spent: 0,
+    idle_time_spent: 0,
     problems_solved: []
   }
 };
 
 // Initialize extension
 chrome.runtime.onInstalled.addListener(() => {
-  loadState().then(() => {
-    // Only reset if it's a new day
-    const today = new Date().toISOString().split('T')[0];
-    if (!currentState.dailyStats.date || currentState.dailyStats.date !== today) {
+  initializeState();
+  setupMidnightReset();
+});
+
+async function initializeState() {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    // Get today's stats from MongoDB
+    const response = await fetch(`${API_BASE_URL}/stats/${today}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data) {
+        currentState.dailyStats = {
+          date: data.date,
+          total_time_spent: data.totalTimeSpent || 0,
+          idle_time_spent: data.idleTimeSpent || 0,
+          problems_solved: data.problemsSolved || []
+        };
+        currentState.totalTimeToday = data.totalTimeSpent || 0;
+        currentState.idleTimeToday = data.idleTimeSpent || 0;
+      } else {
+        resetDailyStats();
+      }
+    } else {
       resetDailyStats();
     }
-    setupMidnightReset();
-  });
-});
+  } catch (error) {
+    console.error('Error initializing state:', error);
+    resetDailyStats();
+  }
+}
 
 // Setup midnight reset
 function setupMidnightReset() {
@@ -67,9 +90,12 @@ function resetDailyStats() {
   currentState.dailyStats = {
     date: today,
     total_time_spent: 0,
+    idle_time_spent: 0,
     problems_solved: []
   };
   currentState.totalTimeToday = 0;
+  currentState.idleTimeToday = 0;
+  currentState.lastIdleStart = null;
   currentState.trackingStartTime = null;
   currentState.isTracking = false;
   currentState.currentProblem = null;
@@ -140,6 +166,7 @@ function startTracking() {
     currentState.isTracking = true;
     currentState.lastActivity = now;
     currentState.trackingStartTime = now;
+    currentState.lastIdleStart = null; // Reset idle tracking
     console.log('Started tracking at:', new Date(now).toLocaleTimeString());
   }
   
@@ -163,9 +190,17 @@ function updateTotalTime() {
     // Calculate time since last update
     let trackingDuration = now - currentState.trackingStartTime;
     
-    // If there's been no activity for IDLE_THRESHOLD, subtract the idle time
+    // If there's been no activity for IDLE_THRESHOLD, count it as idle time
     if (now - currentState.lastActivity > IDLE_THRESHOLD) {
-      trackingDuration -= (now - currentState.lastActivity - IDLE_THRESHOLD);
+      const idleDuration = now - currentState.lastActivity - IDLE_THRESHOLD;
+      trackingDuration -= idleDuration;
+      
+      // Update idle time if we haven't counted this period yet
+      if (!currentState.lastIdleStart || now - currentState.lastIdleStart > IDLE_THRESHOLD) {
+        currentState.idleTimeToday += idleDuration;
+        currentState.lastIdleStart = now;
+        currentState.dailyStats.idle_time_spent = currentState.idleTimeToday;
+      }
     }
     
     // Only add positive durations
@@ -176,7 +211,10 @@ function updateTotalTime() {
     
     // Reset for next update
     currentState.trackingStartTime = now;
-    console.log('Updated total time:', formatDuration(currentState.totalTimeToday));
+    console.log('Updated times:', {
+      total: formatDuration(currentState.totalTimeToday),
+      idle: formatDuration(currentState.idleTimeToday)
+    });
     saveState();
   }
 }
@@ -192,8 +230,30 @@ function resetIdleTimer() {
 
 function handleIdle() {
   if (currentState.isTracking) {
+    const now = Date.now();
     updateTotalTime();
-    console.log('User went idle, pausing tracking');
+    
+    if (!currentState.lastIdleStart) {
+      currentState.lastIdleStart = now;
+      console.log('Started idle tracking at:', new Date(now).toLocaleTimeString());
+      
+      // Update badge to show idle status
+      chrome.action.setBadgeText({ text: 'IDLE' });
+      chrome.action.setBadgeBackgroundColor({ color: '#FFA500' });
+    }
+    
+    // Calculate and update idle time
+    const idleDuration = now - currentState.lastIdleStart;
+    currentState.idleTimeToday += idleDuration;
+    currentState.dailyStats.idle_time_spent = currentState.idleTimeToday;
+    
+    console.log('Idle time updated:', {
+      current: formatDuration(idleDuration),
+      total: formatDuration(currentState.idleTimeToday)
+    });
+    
+    saveState();
+    saveDailyStats();
   }
 }
 
@@ -223,11 +283,15 @@ function getCurrentStats() {
     updateTotalTime();
   }
   
-  return {
+  const stats = {
     ...currentState.dailyStats,
     total_time: formatDuration(currentState.dailyStats.total_time_spent),
-    total_time_spent: currentState.totalTimeToday, // Include raw milliseconds
+    idle_time: formatDuration(currentState.dailyStats.idle_time_spent),
+    total_time_spent: currentState.totalTimeToday,
+    idle_time_spent: currentState.idleTimeToday,
     current_problem: currentState.currentProblem?.title,
+    is_idle: !!currentState.lastIdleStart,
+    idle_duration: currentState.lastIdleStart ? formatDuration(Date.now() - currentState.lastIdleStart) : '00:00:00',
     problems_solved: currentState.dailyStats.problems_solved.map(problem => ({
       ...problem,
       title: problem.title || problem.problem_name || 'Unknown Problem',
@@ -236,6 +300,8 @@ function getCurrentStats() {
       timestamp: problem.timestamp || problem.submissionTime || Date.now()
     }))
   };
+  
+  return stats;
 }
 
 function trackProblemSolved(problemData) {
@@ -277,6 +343,13 @@ function handleUserActivity(message) {
   const now = Date.now();
   currentState.lastActivity = now;
   
+  // Clear idle status if user becomes active
+  if (currentState.lastIdleStart) {
+    console.log('User returned from idle at:', new Date(now).toLocaleTimeString());
+    chrome.action.setBadgeText({ text: '' });
+    currentState.lastIdleStart = null;
+  }
+  
   if (!currentState.isTracking) {
     startTracking();
   } else {
@@ -289,11 +362,14 @@ function handleUserActivity(message) {
       title: message.problemTitle,
       id: message.problemId,
       startTime: now,
-      activeTime: message.activeTime || 0
+      activeTime: message.activeTime || 0,
+      lastActiveTime: now
     };
-  } else if (currentState.currentProblem && message.activeTime !== undefined) {
-    // Update active time if available
-    currentState.currentProblem.activeTime = message.activeTime;
+  } else if (currentState.currentProblem) {
+    // Update active time
+    const activeTime = now - (currentState.currentProblem.lastActiveTime || now);
+    currentState.currentProblem.activeTime = (currentState.currentProblem.activeTime || 0) + activeTime;
+    currentState.currentProblem.lastActiveTime = now;
   }
   
   // Update total time
@@ -322,53 +398,14 @@ function handleProblemOpened(data) {
 
 // State persistence
 async function saveState() {
-  try {
-    await chrome.storage.local.set({
-      [STATE_STORAGE_KEY]: currentState
-    });
-  } catch (error) {
-    console.error('Error saving state:', error);
-  }
+  // Only save the current state to MongoDB
+  await saveDailyStats();
 }
 
 async function loadState() {
-  try {
-    const result = await chrome.storage.local.get(STATE_STORAGE_KEY);
-    if (result[STATE_STORAGE_KEY]) {
-      const savedState = result[STATE_STORAGE_KEY];
-      
-      // Check if it's a new day
-      const today = new Date().toISOString().split('T')[0];
-      if (savedState.dailyStats.date !== today) {
-        // It's a new day, reset stats but keep the state structure
-        resetDailyStats();
-      } else {
-        // Restore the saved state
-        currentState = savedState;
-        
-        // If we were tracking before, resume
-        if (currentState.isTracking) {
-          // Check if we have active LeetCode tabs
-          chrome.tabs.query({ url: "*://*.leetcode.com/*" }, (tabs) => {
-            currentState.activeTabs = tabs.length;
-            if (tabs.length > 0) {
-              // Resume tracking
-              currentState.trackingStartTime = Date.now();
-              resetIdleTimer();
-            } else {
-              // No active tabs, stop tracking
-              currentState.isTracking = false;
-            }
-          });
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error loading state:', error);
-  }
+  await initializeState();
 }
 
-// Local storage interaction
 async function saveDailyStats() {
   if (!currentState.dailyStats.date) return;
   
@@ -381,12 +418,13 @@ async function saveDailyStats() {
         title: problem.title || problem.problem_name || 'Unknown Problem',
         difficulty: problem.difficulty || 'Medium',
         language: problem.language || 'Unknown',
-        timeSpent: Math.max(0, problem.timeSpent || 0), // Ensure non-negative time
+        timeSpent: Math.max(0, problem.timeSpent || 0),
         timestamp: problem.timestamp || Date.now(),
         url: problem.url
       })),
       problemsSolvedCount: currentState.dailyStats.problems_solved.length,
-      totalTimeSpent: Math.max(0, currentState.totalTimeToday) // Ensure non-negative time
+      totalTimeSpent: Math.max(0, currentState.totalTimeToday),
+      idleTimeSpent: Math.max(0, currentState.idleTimeToday)
     };
 
     // Save to MongoDB
@@ -401,39 +439,24 @@ async function saveDailyStats() {
     if (!response.ok) {
       throw new Error('Failed to save stats to server');
     }
-
-    // Also save to local storage as backup
-    const key = `${STORAGE_KEY_PREFIX}${currentState.dailyStats.date}`;
-    await chrome.storage.local.set({
-      [key]: statsToSave
-    });
     
-    console.log('Saved daily stats for:', currentState.dailyStats.date);
+    console.log('Saved daily stats to MongoDB for:', currentState.dailyStats.date);
   } catch (error) {
-    console.error('Error saving stats:', error);
+    console.error('Error saving stats to MongoDB:', error);
   }
 }
 
 async function getHistoryStats(date) {
   try {
-    // Try to get from MongoDB first
     const response = await fetch(`${API_BASE_URL}/stats/${date}`);
-    if (response.ok) {
-      const data = await response.json();
-      return data;
+    if (!response.ok) {
+      throw new Error('Failed to fetch stats from server');
     }
-
-    // Fallback to local storage
-    const key = `${STORAGE_KEY_PREFIX}${date}`;
-    const result = await chrome.storage.local.get(key);
-    return result[key];
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error('Error getting history stats:', error);
-    
-    // Fallback to local storage
-    const key = `${STORAGE_KEY_PREFIX}${date}`;
-    const result = await chrome.storage.local.get(key);
-    return result[key];
+    console.error('Error getting history stats from MongoDB:', error);
+    return null;
   }
 }
 
