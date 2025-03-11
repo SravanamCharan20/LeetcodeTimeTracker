@@ -109,8 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const problemCard = document.createElement('div');
         problemCard.className = 'problem-card';
         
-        const timeSpent = formatDuration(problem.timeSpent || 0);
+        const timeSpent = formatDuration(problem.timeSpent);
         const submissionTime = formatTimestamp(problem.timestamp);
+        const difficulty = problem.difficulty?.toLowerCase() || 'medium';
+        
+        // Get difficulty icon
+        const difficultyIcon = difficulty === 'easy' ? 'fa-circle-check' :
+                             difficulty === 'medium' ? 'fa-circle-half-stroke' :
+                             'fa-circle-exclamation';
         
         problemCard.innerHTML = `
           <div class="problem-card-header">
@@ -123,8 +129,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div class="problem-tags">
-            <span class="tag difficulty-${problem.difficulty?.toLowerCase()}" style="color: ${problem.difficulty?.toLowerCase() === 'easy' ? 'difficulty-easy' : problem.difficulty?.toLowerCase() === 'medium' ? 'yellow' : 'red'}">${problem.difficulty}</span>
-            <span class="tag">${submissionTime}</span>
+            <span class="tag difficulty-${difficulty}">
+              <i class="fas ${difficultyIcon}"></i>
+              ${problem.difficulty}
+            </span>
+            <span class="tag time-tag">
+             
+              ${submissionTime}
+            </span>
           </div>
         `;
         
@@ -250,6 +262,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const timeSpent = formatDuration(problem.timeSpent);
         const submissionTime = formatTimestamp(problem.timestamp);
+        const difficulty = problem.difficulty?.toLowerCase() || 'medium';
+        
+        // Get difficulty icon
+        const difficultyIcon = difficulty === 'easy' ? 'fa-circle-check' :
+                             difficulty === 'medium' ? 'fa-circle-half-stroke' :
+                             'fa-circle-exclamation';
         
         problemCard.innerHTML = `
           <div class="problem-card-header">
@@ -262,8 +280,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div class="problem-tags">
-            <span class="tag difficulty-${problem.difficulty?.toLowerCase()}" style="color: ${problem.difficulty?.toLowerCase() === 'easy' ? '#00b8a3' : problem.difficulty?.toLowerCase() === 'medium' ? '#ffc01e' : '#ff375f'}">${problem.difficulty}</span>
-            <span class="tag">${submissionTime}</span>
+            <span class="tag difficulty-${difficulty}">
+              <i class="fas ${difficultyIcon}"></i>
+              ${problem.difficulty}
+            </span>
+            <span class="tag time-tag">
+             
+              ${submissionTime}
+            </span>
           </div>
         `;
         
