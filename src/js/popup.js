@@ -8,6 +8,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const backToTodayButton = document.getElementById('back-to-today');
   const backFromSettingsButton = document.getElementById('back-from-settings');
   const historyDate = document.getElementById('history-date');
+  const darkModeToggle = document.getElementById('dark-mode-toggle');
+  const body = document.querySelector('body');
+
+  // Initialize dark mode from storage
+  chrome.storage.sync.get(['darkMode'], (result) => {
+    const isDarkMode = result.darkMode || false;
+    darkModeToggle.checked = isDarkMode;
+    updateTheme(isDarkMode);
+  });
+
+  // Dark mode toggle handler
+  darkModeToggle.addEventListener('change', (e) => {
+    const isDarkMode = e.target.checked;
+    updateTheme(isDarkMode);
+    // Save preference
+    chrome.storage.sync.set({ darkMode: isDarkMode });
+  });
+
+  function updateTheme(isDarkMode) {
+    if (isDarkMode) {
+      body.classList.add('dark-mode');
+    } else {
+      body.classList.remove('dark-mode');
+    }
+  }
 
   // Stats Elements
   const totalTimeElement = document.getElementById('total-time');
@@ -98,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div class="problem-tags">
-            <span class="tag difficulty-${problem.difficulty}">${problem.difficulty}</span>
+            <span class="tag difficulty-${problem.difficulty?.toLowerCase()}" style="color: ${problem.difficulty?.toLowerCase() === 'easy' ? 'difficulty-easy' : problem.difficulty?.toLowerCase() === 'medium' ? 'yellow' : 'red'}">${problem.difficulty}</span>
             <span class="tag">${submissionTime}</span>
           </div>
         `;

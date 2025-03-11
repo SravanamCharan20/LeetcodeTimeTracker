@@ -47,17 +47,14 @@
 
       <div class="current-problem-card">
         <div class="current-problem-header">
+          <h1>Current Problem</h1>
           <div class="current-problem-title" id="current-problem">No active problem</div>
-          <div class="current-problem-time">
-            <i class="fas fa-clock"></i>
-            <span id="problem-time">00:00:00</span>
-          </div>
         </div>
       </div>
 
       <div class="problems-section">
         <div class="section-header">
-          <h2>Today's Problems</h2>
+          <h2>Today's solved Problems</h2>
           <div class="problems-count">
             <i class="fas fa-check-circle"></i>
             <span id="problems-solved">0</span> solved
@@ -98,6 +95,18 @@
         <p>Configure your LeetCode Activity Tracker</p>
       </div>
       <!-- Add settings options here -->
+      <div class="settings-content">
+        <div class="setting-item">
+          <div class="setting-label">
+            <span>Dark Mode</span>
+            <p class="setting-description">Switch between light and dark themes</p>
+          </div>
+          <label class="toggle-switch" for="dark-mode-toggle">
+            <input type="checkbox" id="dark-mode-toggle" aria-label="Toggle dark mode">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </section>
   </main>
 

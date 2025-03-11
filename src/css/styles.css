@@ -1,5 +1,6 @@
 /* Scope all styles to extension popup */
 .leetcode-activity-tracker-popup {
+  /* Light mode variables */
   --primary-color: #1890ff;
   --secondary-color: #52c41a;
   --danger-color: #ff4d4f;
@@ -15,6 +16,34 @@
   --gradient-primary: linear-gradient(135deg, #1890ff 0%, #36cff3 100%);
   --gradient-secondary: linear-gradient(135deg, #52c41a 0%, #7fe241 100%);
   --transition-speed: 0.3s;
+  
+  /* Tag Colors */
+  --tag-easy-bg: rgba(0, 184, 163, 0.1);
+  --tag-easy-color: #00b8a3;
+  --tag-medium-bg: rgba(255, 192, 30, 0.1);
+  --tag-medium-color: #ffc01e;
+  --tag-hard-bg: rgba(255, 55, 95, 0.1);
+  --tag-hard-color: #ff375f;
+}
+
+/* Dark mode styles */
+.leetcode-activity-tracker-popup.dark-mode {
+  --background-color: #1a1a1a;
+  --card-background: #2d2d2d;
+  --text-color: #e6e6e6;
+  --text-secondary: #a6a6a6;
+  --border-color: #404040;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --gradient-primary: linear-gradient(135deg, #096dd9 0%, #1890ff 100%);
+  
+  /* Dark mode tag colors */
+  --tag-easy-bg: rgba(0, 184, 163, 0.2);
+  --tag-easy-color: #00d1b9;
+  --tag-medium-bg: rgba(255, 192, 30, 0.2);
+  --tag-medium-color: #ffd54f;
+  --tag-hard-bg: rgba(255, 55, 95, 0.2);
+  --tag-hard-color: #ff6b89;
 }
 
 .leetcode-activity-tracker-popup {
@@ -242,18 +271,18 @@
 }
 
 .leetcode-activity-tracker-popup .tag.difficulty-Easy {
-  color: var(--secondary-color);
-  background: rgba(82, 196, 26, 0.1);
+  color: var(--tag-easy-color);
+  background: var(--tag-easy-bg);
 }
 
 .leetcode-activity-tracker-popup .tag.difficulty-Medium {
-  color: var(--warning-color);
-  background: rgba(250, 173, 20, 0.1);
+  color: var(--tag-medium-color);
+  background: var(--tag-medium-bg);
 }
 
 .leetcode-activity-tracker-popup .tag.difficulty-Hard {
-  color: var(--danger-color);
-  background: rgba(255, 77, 79, 0.1);
+  color: var(--tag-hard-color);
+  background: var(--tag-hard-bg);
 }
 
 /* Enhanced Buttons */
@@ -435,7 +464,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--text-secondary);
+  color:#096dd9;
   font-size: 0.875rem;
 }
 
@@ -462,7 +491,10 @@
 
 .current-problem-title {
   font-weight: 600;
-  color: var(--text-primary);
+  color: rgb(0, 216, 0);
+  font-size:larger;
+  text-align: center;
+
 }
 
 .current-problem-time {
@@ -479,6 +511,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
+  color: #096dd9;
 }
 
 .section-header h2 {
@@ -549,6 +582,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  color: #1a1a1a;
 }
 
 .tag {
@@ -559,7 +593,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   background: var(--bg-tertiary);
-  color: var(--text-secondary);
+  color: black;
 }
 
 .difficulty-easy {
@@ -631,6 +665,85 @@
 .settings-header p {
   color: var(--text-secondary);
   font-size: 0.875rem;
+}
+
+/* Settings styles */
+.leetcode-activity-tracker-popup .settings-content {
+  padding: 16px;
+}
+
+.leetcode-activity-tracker-popup .setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--card-background);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.leetcode-activity-tracker-popup .setting-label {
+  flex: 1;
+}
+
+.leetcode-activity-tracker-popup .setting-label span {
+  font-weight: 500;
+  color: var(--text-color);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.leetcode-activity-tracker-popup .setting-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Toggle switch */
+.leetcode-activity-tracker-popup .toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.leetcode-activity-tracker-popup .toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.leetcode-activity-tracker-popup .toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--text-secondary);
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.leetcode-activity-tracker-popup .toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.leetcode-activity-tracker-popup .toggle-switch input:checked + .toggle-slider {
+  background-color: var(--primary-color);
+}
+
+.leetcode-activity-tracker-popup .toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
 }
 
 /* Utilities */
