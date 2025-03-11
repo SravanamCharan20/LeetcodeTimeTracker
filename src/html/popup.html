@@ -1,78 +1,106 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LeetCode Activity Tracker</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeetCode Activity Tracker</title>
   <link rel="stylesheet" href="../css/styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-  <div class="container">
-    <header class="app-header">
-      <h1><i class="fas fa-code"></i> LeetCode Tracker</h1>
-    </header>
-
-    <div id="stats-section" class="section">
-      <div class="section-header">
-        <h2>Today's Activity</h2>
-      </div>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon"><i class="fas fa-clock"></i></div>
-          <div class="stat-content">
-            <label>Total Time</label>
-            <span id="total-time">00:00:00</span>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon"><i class="fas fa-laptop-code"></i></div>
-          <div class="stat-content">
-            <label>Current Problem</label>
-            <span id="current-problem">None</span>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-          <div class="stat-content">
-            <label>Problems Solved</label>
-            <span id="problems-solved">0</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="panel">
-        <div class="panel-header">
-          <h3><i class="fas fa-trophy"></i> Recent Problems</h3>
-        </div>
-        <div class="panel-body">
-          <ul id="recent-problems" class="list"></ul>
-        </div>
-      </div>
-      
-      <button id="view-history" class="btn primary-btn">
-        <i class="fas fa-calendar-alt"></i> View History
+<body class="leetcode-extension">
+  <header class="header">
+    <div class="logo">
+      <i class="fas fa-code"></i>
+      <span>LeetCode Tracker</span>
+    </div>
+    <div class="header-actions">
+      <button id="view-history" class="btn" title="View History">
+        <i class="fas fa-history"></i>
+        <span>History</span>
+      </button>
+      <button id="settings" class="btn" title="Settings">
+        <i class="fas fa-cog"></i>
+        <span class="sr-only">Settings</span>
       </button>
     </div>
+  </header>
 
-    <div id="history-section" class="section hidden">
-      <div class="section-header">
-        <h2>Activity History</h2>
-        <button id="back-to-today" class="icon-btn" aria-label="Back to today's stats">
+  <main class="content">
+    <!-- Today's Stats Section -->
+    <section id="stats-section">
+      <div class="time-stats">
+        <div class="time-card active-time">
+          <div class="time-label">
+            <i class="fas fa-clock"></i>
+            <span>Active Time</span>
+          </div>
+          <div id="total-time" class="time-value">00:00:00</div>
+        </div>
+        <div class="time-card idle-time">
+          <div class="time-label">
+            <i class="fas fa-coffee"></i>
+            <span>Idle Time</span>
+          </div>
+          <div id="idle-time" class="time-value">00:00:00</div>
+        </div>
+      </div>
+
+      <div class="current-problem-card">
+        <div class="current-problem-header">
+          <div class="current-problem-title" id="current-problem">No active problem</div>
+          <div class="current-problem-time">
+            <i class="fas fa-clock"></i>
+            <span id="problem-time">00:00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="problems-section">
+        <div class="section-header">
+          <h2>Today's Problems</h2>
+          <div class="problems-count">
+            <i class="fas fa-check-circle"></i>
+            <span id="problems-solved">0</span> solved
+          </div>
+        </div>
+
+        <div id="recent-problems" class="problem-cards"></div>
+        <div id="no-problems" class="no-problems">
+          <i class="fas fa-code"></i>
+          <p>No problems solved today</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- History Section -->
+    <section id="history-section" class="hidden">
+      <div class="history-header">
+        <button id="back-to-today" class="btn" title="Back to Today">
           <i class="fas fa-arrow-left"></i>
+          <span>Back</span>
+        </button>
+        <label for="history-date" class="sr-only">Select Date</label>
+        <input type="date" id="history-date" class="date-input" title="Select Date">
+      </div>
+      <div id="history-stats"></div>
+    </section>
+
+    <!-- Settings Section -->
+    <section id="settings-section" class="hidden">
+      <div class="history-header">
+        <button id="back-from-settings" class="btn" title="Back to Today">
+          <i class="fas fa-arrow-left"></i>
+          <span>Back</span>
         </button>
       </div>
-      
-      <div class="date-picker">
-        <label for="history-date">Select Date:</label>
-        <input type="date" id="history-date" aria-label="Select date for history view" />
+      <div class="settings-header">
+        <h2>Settings</h2>
+        <p>Configure your LeetCode Activity Tracker</p>
       </div>
-      
-      <div id="history-stats"></div>
-    </div>
-  </div>
+      <!-- Add settings options here -->
+    </section>
+  </main>
+
   <script src="../js/popup.js"></script>
 </body>
 </html> 

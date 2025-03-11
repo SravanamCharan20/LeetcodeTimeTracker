@@ -1,8 +1,8 @@
 // Constants
-const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+const IDLE_TIMEOUT = 60 * 1000; // 1 minute in milliseconds
+const IDLE_THRESHOLD = 60 * 1000; // 1 minute in milliseconds
 const DUPLICATE_SUBMISSION_THRESHOLD = 5000; // 5 seconds
 const API_BASE_URL = 'http://localhost:3000/api';
-const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 const TIME_UPDATE_INTERVAL = 30 * 1000; // Update MongoDB every 30 seconds
 
 // State management
@@ -325,32 +325,49 @@ function updateTotalTime() {
   
   if (currentState.trackingStartTime && currentState.isTracking) {
     // Calculate time since last update
-    let trackingDuration = now - currentState.trackingStartTime;
+    const timeSinceLastUpdate = now - currentState.trackingStartTime;
     
-    // If there's been no activity for IDLE_THRESHOLD, count it as idle time
+    // Check if we're in an idle period
     if (now - currentState.lastActivity > IDLE_THRESHOLD) {
-      const idleDuration = now - currentState.lastActivity - IDLE_THRESHOLD;
-      trackingDuration -= idleDuration;
-      
-      // Update idle time if we haven't counted this period yet
-      if (!currentState.lastIdleStart || now - currentState.lastIdleStart > IDLE_THRESHOLD) {
-        currentState.idleTimeToday += idleDuration;
-        currentState.lastIdleStart = now;
-        currentState.dailyStats.idle_time_spent = currentState.idleTimeToday;
+      // If we haven't marked the start of idle period yet
+      if (!currentState.lastIdleStart) {
+        currentState.lastIdleStart = currentState.lastActivity;
+        console.log('Started idle period at:', new Date(currentState.lastIdleStart).toLocaleTimeString());
+        
+        // Update badge to show idle status
+        chrome.action.setBadgeText({ text: 'IDLE' });
+        chrome.action.setBadgeBackgroundColor({ color: '#FFA500' });
       }
-    }
-    
-    // Only add positive durations
-    if (trackingDuration > 0) {
-      currentState.totalTimeToday += trackingDuration;
-      currentState.dailyStats.total_time_spent = currentState.totalTimeToday;
+      
+      // Calculate idle time for this update period
+      const idleDuration = now - Math.max(currentState.trackingStartTime, currentState.lastIdleStart);
+      if (idleDuration > 0) {
+        currentState.idleTimeToday += idleDuration;
+        currentState.dailyStats.idle_time_spent = currentState.idleTimeToday;
+        console.log('Updated idle time:', formatDuration(currentState.idleTimeToday));
+        
+        // Save idle time to database
+        saveDailyStats();
+      }
+    } else {
+      // Not idle, add time to total only if we're not in an idle period
+      if (!currentState.lastIdleStart) {
+        currentState.totalTimeToday += timeSinceLastUpdate;
+        currentState.dailyStats.total_time_spent = currentState.totalTimeToday;
+        
+        // Save active time to database
+        saveDailyStats();
+      }
     }
     
     // Reset for next update
     currentState.trackingStartTime = now;
+    
     console.log('Updated times:', {
       total: formatDuration(currentState.totalTimeToday),
-      idle: formatDuration(currentState.idleTimeToday)
+      idle: formatDuration(currentState.idleTimeToday),
+      lastActivity: new Date(currentState.lastActivity).toLocaleTimeString(),
+      isIdle: !!currentState.lastIdleStart
     });
   }
 }
@@ -367,29 +384,18 @@ function resetIdleTimer() {
 function handleIdle() {
   if (currentState.isTracking) {
     const now = Date.now();
-    updateTotalTime();
     
-    if (!currentState.lastIdleStart) {
-      currentState.lastIdleStart = now;
-      console.log('Started idle tracking at:', new Date(now).toLocaleTimeString());
-      
-      // Update badge to show idle status
-      chrome.action.setBadgeText({ text: 'IDLE' });
-      chrome.action.setBadgeBackgroundColor({ color: '#FFA500' });
+    // Only handle idle if we've passed the threshold
+    if (now - currentState.lastActivity >= IDLE_THRESHOLD) {
+      if (!currentState.lastIdleStart) {
+        currentState.lastIdleStart = currentState.lastActivity;
+        console.log('Started idle tracking at:', new Date(currentState.lastIdleStart).toLocaleTimeString());
+        
+        // Update badge to show idle status
+        chrome.action.setBadgeText({ text: 'IDLE' });
+        chrome.action.setBadgeBackgroundColor({ color: '#FFA500' });
+      }
     }
-    
-    // Calculate and update idle time
-    const idleDuration = now - currentState.lastIdleStart;
-    currentState.idleTimeToday += idleDuration;
-    currentState.dailyStats.idle_time_spent = currentState.idleTimeToday;
-    
-    console.log('Idle time updated:', {
-      current: formatDuration(idleDuration),
-      total: formatDuration(currentState.idleTimeToday)
-    });
-    
-    saveState();
-    saveDailyStats();
   }
 }
 
@@ -505,14 +511,33 @@ function trackProblemSolved(problemData) {
 
 function handleUserActivity(message) {
   const now = Date.now();
-  currentState.lastActivity = now;
   
-  // Clear idle status if user becomes active
+  // If coming back from idle, update final idle time
   if (currentState.lastIdleStart) {
-    console.log('User returned from idle at:', new Date(now).toLocaleTimeString());
+    const finalIdleTime = now - currentState.lastIdleStart;
+    if (finalIdleTime > 0) {
+      currentState.idleTimeToday += finalIdleTime;
+      currentState.dailyStats.idle_time_spent = currentState.idleTimeToday;
+      
+      // Save the final idle time to database immediately
+      saveDailyStats();
+      
+      console.log('User returned from idle:', {
+        duration: formatDuration(finalIdleTime),
+        totalIdle: formatDuration(currentState.idleTimeToday)
+      });
+    }
+    
+    // Clear idle status
     chrome.action.setBadgeText({ text: '' });
     currentState.lastIdleStart = null;
+    
+    // Reset tracking start time to now to avoid counting idle time as active
+    currentState.trackingStartTime = now;
   }
+  
+  // Update last activity time
+  currentState.lastActivity = now;
   
   if (!currentState.isTracking) {
     startTracking();
@@ -530,15 +555,12 @@ function handleUserActivity(message) {
       lastActiveTime: now
     };
   } else if (currentState.currentProblem) {
-    // Update active time
-    const activeTime = now - (currentState.currentProblem.lastActiveTime || now);
-    currentState.currentProblem.activeTime = (currentState.currentProblem.activeTime || 0) + activeTime;
+    // Only update active time if we weren't idle
+    if (!currentState.lastIdleStart) {
+      const activeTime = now - (currentState.currentProblem.lastActiveTime || now);
+      currentState.currentProblem.activeTime = (currentState.currentProblem.activeTime || 0) + activeTime;
+    }
     currentState.currentProblem.lastActiveTime = now;
-  }
-  
-  // Update total time
-  if (currentState.isTracking) {
-    updateTotalTime();
   }
   
   saveState();
@@ -574,7 +596,7 @@ async function saveDailyStats() {
   if (!currentState.dailyStats.date) return;
   
   try {
-    // Format the stats before saving
+    // Ensure we have the latest times before saving
     const statsToSave = {
       date: currentState.dailyStats.date,
       problemsSolved: currentState.dailyStats.problems_solved.map(problem => ({
@@ -604,7 +626,12 @@ async function saveDailyStats() {
       throw new Error('Failed to save stats to server');
     }
     
-    console.log('Saved daily stats to MongoDB for:', currentState.dailyStats.date);
+    console.log('Saved stats to MongoDB:', {
+      date: statsToSave.date,
+      total: formatDuration(statsToSave.totalTimeSpent),
+      idle: formatDuration(statsToSave.idleTimeSpent),
+      problems: statsToSave.problemsSolvedCount
+    });
   } catch (error) {
     console.error('Error saving stats to MongoDB:', error);
   }

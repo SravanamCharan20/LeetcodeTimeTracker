@@ -1,260 +1,639 @@
-/* Base styles */
-:root {
-  --primary-color: #4285f4;
-  --secondary-color: #34a853;
-  --background-color: #ffffff;
-  --text-color: #333333;
-  --border-color: #e0e0e0;
-  --hover-color: #f5f5f5;
-  --shadow-color: rgba(0, 0, 0, 0.1);
+/* Scope all styles to extension popup */
+.leetcode-activity-tracker-popup {
+  --primary-color: #1890ff;
+  --secondary-color: #52c41a;
+  --danger-color: #ff4d4f;
+  --warning-color: #faad14;
+  --background-color: #f5f5f5;
+  --card-background: #ffffff;
+  --text-color: #262626;
+  --text-secondary: #8c8c8c;
+  --border-color: #f0f0f0;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --header-height: 48px;
+  --gradient-primary: linear-gradient(135deg, #1890ff 0%, #36cff3 100%);
+  --gradient-secondary: linear-gradient(135deg, #52c41a 0%, #7fe241 100%);
+  --transition-speed: 0.3s;
 }
 
-body {
+.leetcode-activity-tracker-popup {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
   min-width: 350px;
+  max-width: 400px;
 }
 
-.container {
-  padding: 16px;
-  min-width: 350px;
-  max-width: 450px;
-  margin: 0 auto;
+.leetcode-activity-tracker-popup .container {
+  min-height: 400px;
+  max-height: 600px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) var(--background-color);
 }
 
-/* Header styles */
-.app-header {
-  text-align: center;
-  padding: 12px 0;
-  margin-bottom: 20px;
-  border-bottom: 2px solid var(--primary-color);
+.leetcode-activity-tracker-popup .container::-webkit-scrollbar {
+  width: 6px;
 }
 
-.app-header h1 {
-  margin: 0;
+.leetcode-activity-tracker-popup .container::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+.leetcode-activity-tracker-popup .container::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
+  border-radius: 3px;
+}
+
+/* Enhanced Header styles */
+.leetcode-activity-tracker-popup .app-header {
+  background: var(--gradient-primary);
+  border-bottom: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--header-height);
+  padding: 0 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.leetcode-activity-tracker-popup .header-content {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leetcode-activity-tracker-popup .logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.leetcode-activity-tracker-popup .logo i {
   font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.leetcode-activity-tracker-popup .header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Enhanced Time stats */
+.leetcode-activity-tracker-popup .time-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.leetcode-activity-tracker-popup .time-card {
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  cursor: default;
+}
+
+.leetcode-activity-tracker-popup .time-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.leetcode-activity-tracker-popup .time-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.leetcode-activity-tracker-popup .time-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-color);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Enhanced Current problem card */
+.leetcode-activity-tracker-popup .current-problem-card {
+  background: var(--card-background);
+  border-radius: 12px;
+  margin: 0 16px 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-speed);
+  border: 1px solid var(--border-color);
+}
+
+.leetcode-activity-tracker-popup .current-problem-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.leetcode-activity-tracker-popup .card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--primary-color);
+  font-size: 14px;
+  margin-bottom: 12px;
+  font-weight: 500;
 }
 
-/* Section styles */
-.section {
-  margin-bottom: 24px;
-  min-width: 300px;
+.leetcode-activity-tracker-popup .current-problem-content h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: var(--text-color);
+  line-height: 1.4;
 }
 
-.section-header {
+/* Enhanced Problems section */
+.leetcode-activity-tracker-popup .problems-section {
+  padding: 0 16px 16px;
+}
+
+.leetcode-activity-tracker-popup .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
 }
 
-.section-header h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-/* Stats grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px var(--shadow-color);
-  display: flex;
-  align-items: center;
-  min-width: 140px;
-}
-
-.stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-content label {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-.stat-content span {
-  display: block;
+.leetcode-activity-tracker-popup .section-header h2 {
   font-size: 16px;
+  margin: 0;
+  color: var(--text-color);
   font-weight: 600;
 }
 
-/* Panel styles */
-.panel {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px var(--shadow-color);
-  margin-bottom: 20px;
-  min-height: 100px;
-}
-
-.panel-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.panel-header h3 {
-  margin: 0;
-  font-size: 16px;
+.leetcode-activity-tracker-popup .problems-count {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.panel-body {
-  padding: 16px;
-  min-height: 100px;
-}
-
-/* List styles */
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  min-height: 60px;
-}
-
-.list-item {
-  padding: 12px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.list-item:last-child {
-  border-bottom: none;
-}
-
-.list-item-title {
-  font-weight: 500;
-  color: var(--text-color);
-  text-decoration: none;
-}
-
-.list-item-meta {
+  gap: 6px;
+  color: var(--secondary-color);
   font-size: 14px;
-  color: #666;
+  font-weight: 500;
+  padding: 4px 12px;
+  background: rgba(82, 196, 26, 0.1);
+  border-radius: 16px;
 }
 
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 24px;
-  color: #666;
-  font-style: italic;
-  min-height: 100px;
+.leetcode-activity-tracker-popup .problem-cards {
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* History section */
-.date-picker {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
 }
 
-.date-picker input {
-  padding: 8px;
+.leetcode-activity-tracker-popup .problem-card {
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 14px;
 }
 
-/* Buttons */
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.leetcode-activity-tracker-popup .problem-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.leetcode-activity-tracker-popup .problem-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.leetcode-activity-tracker-popup .problem-title {
+  font-weight: 500;
+  color: var(--text-color);
+  text-decoration: none;
   font-size: 14px;
+  line-height: 1.4;
+}
+
+.leetcode-activity-tracker-popup .problem-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.leetcode-activity-tracker-popup .tag {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: transform var(--transition-speed);
+}
+
+.leetcode-activity-tracker-popup .tag:hover {
+  transform: translateY(-1px);
+}
+
+.leetcode-activity-tracker-popup .tag.difficulty-Easy {
+  color: var(--secondary-color);
+  background: rgba(82, 196, 26, 0.1);
+}
+
+.leetcode-activity-tracker-popup .tag.difficulty-Medium {
+  color: var(--warning-color);
+  background: rgba(250, 173, 20, 0.1);
+}
+
+.leetcode-activity-tracker-popup .tag.difficulty-Hard {
+  color: var(--danger-color);
+  background: rgba(255, 77, 79, 0.1);
+}
+
+/* Enhanced Buttons */
+.leetcode-activity-tracker-popup .icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  transition: background-color 0.2s;
+  transition: all var(--transition-speed);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
-.primary-btn {
-  background-color: var(--primary-color);
-  color: white;
+.leetcode-activity-tracker-popup .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
-.primary-btn:hover {
-  background-color: #3367d6;
+/* Enhanced Empty state */
+.leetcode-activity-tracker-popup .no-problems {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text-secondary);
+  background: var(--card-background);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+  margin: 16px 0;
 }
 
-.icon-btn {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
+.leetcode-activity-tracker-popup .no-problems i {
+  font-size: 32px;
+  margin-bottom: 12px;
   color: var(--primary-color);
+  opacity: 0.5;
 }
 
-.icon-btn:hover {
-  background-color: var(--hover-color);
-  border-radius: 50%;
+.leetcode-activity-tracker-popup .no-problems p {
+  margin: 0;
+  font-size: 14px;
 }
 
 /* Utility classes */
-.hidden {
+.leetcode-activity-tracker-popup .hidden {
   display: none !important;
 }
 
-/* Problem difficulty indicators */
-.difficulty-Easy {
-  color: var(--secondary-color);
+.leetcode-activity-tracker-popup .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.difficulty-Medium {
-  color: #f39c12;
+.leetcode-extension {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-light: #9ca3af;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --radius-sm: 0.375rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  width: 400px;
+  min-height: 500px;
+  margin: 0;
+  padding: 0;
 }
 
-.difficulty-Hard {
-  color: #e74c3c;
+.leetcode-extension * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* No problems message */
-.no-problems {
-  text-align: center;
-  padding: 24px;
-  color: #666;
-  font-style: italic;
-  background: #f9f9f9;
-  border-radius: 8px;
-  margin: 16px 0;
-  min-height: 60px;
+/* Header */
+.header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--text-primary);
+}
+
+.logo i {
+  color: var(--primary-color);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+}
+
+.btn:hover {
+  background: var(--bg-secondary);
+}
+
+.btn i {
+  font-size: 1rem;
+}
+
+/* Main Content */
+.content {
+  padding: 1rem;
+}
+
+/* Time Stats */
+.time-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.time-card {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.time-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.time-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Current Problem */
+.current-problem-card {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+}
+
+.current-problem-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.current-problem-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.current-problem-time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Problems Section */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.problems-count {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.problems-count i {
+  color: var(--success-color);
+}
+
+/* Problem Cards */
+.problem-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.problem-card {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+
+.problem-card:hover {
+  background: var(--bg-tertiary);
+}
+
+.problem-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.problem-title {
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+  flex: 1;
+}
+
+.problem-title:hover {
+  color: var(--primary-color);
+}
+
+.problem-time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.problem-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.difficulty-easy {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.difficulty-medium {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.difficulty-hard {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Empty States */
+.no-problems {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-light);
+}
+
+.no-problems i {
+  font-size: 2rem;
+}
+
+.no-problems p {
+  font-size: 0.875rem;
+}
+
+/* History Section */
+.history-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.date-input {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* Settings Section */
+.settings-section {
+  padding: 1rem;
+}
+
+.settings-header {
+  margin-bottom: 1.5rem;
+}
+
+.settings-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.settings-header p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Utilities */
+.hidden {
+  display: none !important;
 } 
