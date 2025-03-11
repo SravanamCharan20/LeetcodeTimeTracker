@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LeetCode Activity Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <h1><i class="fas fa-code"></i> LeetCode Tracker</h1>
+    </header>
+
+    <div id="stats-section" class="section">
+      <div class="section-header">
+        <h2>Today's Activity</h2>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-content">
+            <label>Total Time</label>
+            <span id="total-time">00:00:00</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-laptop-code"></i></div>
+          <div class="stat-content">
+            <label>Current Problem</label>
+            <span id="current-problem">None</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-content">
+            <label>Problems Solved</label>
+            <span id="problems-solved">0</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-trophy"></i> Recent Problems</h3>
+        </div>
+        <div class="panel-body">
+          <ul id="recent-problems" class="list"></ul>
+        </div>
+      </div>
+      
+      <button id="view-history" class="btn primary-btn">
+        <i class="fas fa-calendar-alt"></i> View History
+      </button>
+    </div>
+
+    <div id="history-section" class="section hidden">
+      <div class="section-header">
+        <h2>Activity History</h2>
+        <button id="back-to-today" class="icon-btn" aria-label="Back to today's stats">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+      </div>
+      
+      <div class="date-picker">
+        <label for="history-date">Select Date:</label>
+        <input type="date" id="history-date" aria-label="Select date for history view" />
+      </div>
+      
+      <div id="history-stats"></div>
+    </div>
+  </div>
+  <script src="../js/popup.js"></script>
+</body>
+</html> 

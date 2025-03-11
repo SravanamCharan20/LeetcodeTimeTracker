@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "LeetCode Activity Tracker",
+  "version": "1.0",
+  "description": "Track your LeetCode activity, including time spent, problems solved, and sessions",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://leetcode.com/*"
+  ],
+  "background": {
+    "service_worker": "js/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://leetcode.com/*"],
+      "js": ["js/content.js"],
+      "css": ["css/styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "html/popup.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+} 
